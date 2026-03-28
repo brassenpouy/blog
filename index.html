@@ -4,84 +4,43 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Blog — brassenpouy</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
-    background: #fff;
-    color: #1a1a1a;
-    line-height: 1.8;
-    -webkit-font-smoothing: antialiased;
-  }
-  .container {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 60px 24px 80px;
-  }
-  h1 {
-    font-size: 28px;
-    font-weight: 800;
-    margin-bottom: 8px;
-  }
-  .subtitle {
-    color: #888;
-    font-size: 15px;
-    margin-bottom: 48px;
-  }
-  .post-list { list-style: none; }
-  .post-item {
-    border-bottom: 1px solid #eee;
-    padding: 20px 0;
-  }
-  .post-item:first-child { border-top: 1px solid #eee; }
-  .post-item a {
-    text-decoration: none;
-    color: inherit;
-    display: block;
-  }
-  .post-item a:hover .post-title { color: #0066cc; }
-  .post-date {
-    font-size: 13px;
-    color: #999;
-    margin-bottom: 4px;
-  }
-  .post-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 4px;
-    transition: color 0.15s;
-  }
-  .post-desc {
-    font-size: 14px;
-    color: #666;
-    line-height: 1.6;
-  }
-  .post-tag {
-    display: inline-block;
-    font-size: 11px;
-    background: #f0f4ff;
-    color: #0066cc;
-    padding: 2px 8px;
-    border-radius: 4px;
-    margin-top: 8px;
-    font-weight: 500;
-  }
-</style>
+<link rel="stylesheet" href="./assets/index.css">
 </head>
 <body>
 <div class="container">
   <h1>Blog</h1>
   <p class="subtitle">技术分析与行业洞察</p>
-  <ul class="post-list">
-    <li class="post-item">
-      <a href="./arm-agi-cpu/">
-        <div class="post-date">2026-03-28</div>
-        <div class="post-title">Arm AGI CPU 深度分析 — 技术·市场·产品落地</div>
-        <div class="post-desc">Arm 35 年来首款自研量产芯片，136 核 Neoverse V3，TSMC 3nm，专为 Agentic AI 数据中心设计。从纯 IP 授权商到完整硅片供应商的历史性转折。</div>
-        <span class="post-tag">芯片 · AI 基础设施</span>
-      </a>
-    </li>
+  <ul class="post-list" id="postList">
+    <li class="empty-state">加载中…</li>
   </ul>
 </div>
+<script>
+  fetch('./assets/posts.json')
+    .then(r => r.json())
+    .then(posts => {
+      const list = document.getElementById('postList');
+      if (!posts.length) {
+        list.innerHTML = '<li class="empty-state">暂无文章</li>';
+        return;
+      }
+      posts.sort((a, b) => b.date.localeCompare(a.date));
+      list.innerHTML = posts.map(p => `
+        <li class="post-item">
+          <a href="./${p.slug}/">
+            <div class="post-date">${p.date}</div>
+            <div class="post-title">${p.title}</div>
+            <div class="post-desc">${p.description}</div>
+            <div class="post-tags">
+              ${p.tags.map(t => `<span class="post-tag">${t}</span>`).join('')}
+            </div>
+          </a>
+        </li>
+      `).join('');
+    })
+    .catch(() => {
+      document.getElementById('postList').innerHTML =
+        '<li class="empty-state">加载失败，请刷新重试</li>';
+    });
+</script>
 </body>
 </html>
