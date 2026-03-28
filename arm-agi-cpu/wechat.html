@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arm AGI CPU 深度分析（微信公众号版）</title>
+<style>
+  /* 仅用于本地预览，复制粘贴时公众号编辑器只读取内联 style */
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #fff;
+    color: #1a1a1a;
+    line-height: 1.85;
+    font-size: 16px;
+    padding: 0;
+    margin: 0;
+  }
+</style>
+</head>
+<body>
+
+<section style="max-width:680px;margin:0 auto;padding:20px 16px;font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;color:#1a1a1a;line-height:1.85;font-size:16px;">
+
+<!-- 标题区 -->
+<section style="background:#f0f4ff;border-radius:12px;padding:28px 24px;margin-bottom:28px;border:1px solid #d4e0f7;">
+  <p style="display:inline-block;background:#0066cc;color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;margin:0 0 12px 0;letter-spacing:0.5px;">INDUSTRY DEEP DIVE</p>
+  <h1 style="font-size:24px;font-weight:800;line-height:1.35;margin:0 0 12px 0;color:#111;">Arm AGI CPU 深度分析<br>技术 · 市场 · 产品落地</h1>
+  <p style="color:#5c6370;font-size:14px;line-height:1.7;margin:0 0 14px 0;">Arm 35 年来首款自研量产芯片，136 核 Neoverse V3，TSMC 3nm，专为 Agentic AI 数据中心设计。从纯 IP 授权商到完整硅片供应商——一个历史性转折点。</p>
+  <p style="font-size:12px;color:#999;margin:0;">2026-03-28 · 基于 X / Reddit / 行业媒体综合研究</p>
+</section>
+
+<!-- 关键数字 -->
+<section style="display:flex;gap:8px;margin-bottom:28px;">
+  <section style="flex:1;background:#f7f8fa;border:1px solid #e2e5ea;border-radius:10px;padding:14px 8px;text-align:center;">
+    <p style="font-size:24px;font-weight:800;color:#0a8754;margin:0;line-height:1.1;">136</p>
+    <p style="font-size:11px;color:#5c6370;margin:4px 0 0 0;">Neoverse V3 核心</p>
+  </section>
+  <section style="flex:1;background:#f7f8fa;border:1px solid #e2e5ea;border-radius:10px;padding:14px 8px;text-align:center;">
+    <p style="font-size:24px;font-weight:800;color:#d63031;margin:0;line-height:1.1;">3nm</p>
+    <p style="font-size:11px;color:#5c6370;margin:4px 0 0 0;">TSMC 工艺</p>
+  </section>
+  <section style="flex:1;background:#f7f8fa;border:1px solid #e2e5ea;border-radius:10px;padding:14px 8px;text-align:center;">
+    <p style="font-size:24px;font-weight:800;color:#e67e22;margin:0;line-height:1.1;">+16%</p>
+    <p style="font-size:11px;color:#5c6370;margin:4px 0 0 0;">发布日 ARM 股价</p>
+  </section>
+</section>
+
+<!-- 事件概述 -->
+<h2 style="font-size:20px;font-weight:700;margin:36px 0 14px 0;padding-bottom:8px;border-bottom:2px solid #e2e5ea;color:#111;">事件概述</h2>
+<p style="margin:0 0 12px 0;">2026 年 3 月 24 日，Arm 在旧金山 Fort Mason 举办 <strong>"Arm Everywhere"</strong> CEO keynote，CEO Rene Haas 亲自发布 Arm AGI CPU——Arm 成立 35 年来首款自研量产数据中心处理器。这不再是 IP 授权或 CSS（Compute Subsystem）交付，而是 Arm <strong>直接设计、由 TSMC 代工、以完整芯片形式销售</strong>的产品。</p>
+<p style="margin:0 0 12px 0;">发布当日 ARM 股价飙升约 16%，创一年内最佳单日涨幅。Barclays 上调目标价至 $200，Evercore ISI 上调至 $227，Needham 从 Hold 升级为 Buy。</p>
+
+<!-- 技术规格 -->
+<h2 style="font-size:20px;font-weight:700;margin:36px 0 14px 0;padding-bottom:8px;border-bottom:2px solid #e2e5ea;color:#111;">技术规格深度解读</h2>
+
+<h3 style="font-size:16px;font-weight:600;margin:24px 0 10px 0;color:#0066cc;">核心参数</h3>
+<table style="width:100%;border-collapse:collapse;font-size:14px;margin:12px 0 18px 0;border:1px solid #e2e5ea;border-radius:8px;">
+  <thead><tr>
+    <th style="background:#eef0f4;font-weight:600;text-align:left;padding:8px 12px;border-bottom:2px solid #e2e5ea;">项目</th>
+    <th style="background:#eef0f4;font-weight:600;text-align:left;padding:8px 12px;border-bottom:2px solid #e2e5ea;">规格</th>
+  </tr></thead>
+  <tbody>
+    <tr><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;color:#5c6370;">CPU 核心</td><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;">最高 <strong style="color:#111;">136</strong> 个 Neoverse V3（另有 64 / 128 核变体）</td></tr>
+    <tr><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;color:#5c6370;">工艺</td><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;">TSMC <strong style="color:#111;">3nm</strong>，双 chiplet 设计</td></tr>
+    <tr><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;color:#5c6370;">频率</td><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;">3.2 GHz 基频 / <strong style="color:#111;">3.7 GHz</strong> 睿频</td></tr>
+    <tr><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;color:#5c6370;">TDP</td><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;"><strong style="color:#111;">300W</strong></td></tr>
+    <tr><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;color:#5c6370;">缓存</td><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;">每核 2 MB L2 + 128 MB 共享 SLC</td></tr>
+    <tr><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;color:#5c6370;">内存</td><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;">12 通道 DDR5-8800，<strong style="color:#111;">825 GB/s</strong> 聚合带宽</td></tr>
+    <tr><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;color:#5c6370;">I/O</td><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;">96 lanes <strong style="color:#111;">PCIe 6.0</strong> + CXL 3.0</td></tr>
+    <tr><td style="padding:7px 12px;color:#5c6370;">内存延迟</td><td style="padding:7px 12px;">&lt;100 ns</td></tr>
+  </tbody>
+</table>
+
+<h3 style="font-size:16px;font-weight:600;margin:24px 0 10px 0;color:#0066cc;">架构设计哲学</h3>
+<p style="margin:0 0 10px 0;">EVP Mohamed Awad 表示 AGI CPU 是 <strong>"clean sheet design"</strong>，全部晶体管资源集中于 AI 工作负载：</p>
+<p style="margin:0 0 6px 0;padding-left:12px;">◆ <strong>单线程/核</strong> — 不采用 SMT，确保确定性性能扩展（与 NVIDIA Vera 的 SMT 形成差异化）</p>
+<p style="margin:0 0 6px 0;padding-left:12px;">◆ <strong>内存与 I/O 集成</strong> — 集成到计算核心同一 die 上，最小化延迟</p>
+<p style="margin:0 0 12px 0;padding-left:12px;">◆ <strong>不含加速器</strong> — 避免集成非 100% 利用的功能，聚焦纯 CPU 编排</p>
+
+<h3 style="font-size:16px;font-weight:600;margin:24px 0 10px 0;color:#0066cc;">机架级部署配置</h3>
+
+<!-- 替代 Mermaid：流程图用结构化卡片表示 -->
+<section style="background:#f7f8fa;border:1px solid #e2e5ea;border-radius:10px;padding:18px;margin:12px 0 18px 0;">
+  <p style="text-align:center;margin:0 0 12px 0;font-size:13px;color:#5c6370;">芯片 → 刀片 → 机架 部署路径</p>
+  <p style="text-align:center;margin:0 0 8px 0;"><strong style="color:#0066cc;">Arm AGI CPU</strong>（136 核 / 300W）</p>
+  <p style="text-align:center;margin:0 0 8px 0;color:#999;">↓</p>
+  <p style="text-align:center;margin:0 0 8px 0;"><strong>1OU 双节点刀片</strong>（272 核 / 刀片）</p>
+  <p style="text-align:center;margin:0 0 8px 0;color:#999;">↓ ↘</p>
+  <section style="display:flex;gap:8px;">
+    <section style="flex:1;background:#e6f5ee;border-radius:8px;padding:12px;text-align:center;">
+      <p style="font-size:13px;font-weight:600;color:#0a8754;margin:0 0 4px 0;">风冷 36kW</p>
+      <p style="font-size:20px;font-weight:800;color:#0a8754;margin:0;">8,160 核</p>
+      <p style="font-size:11px;color:#5c6370;margin:4px 0 0 0;">30 刀片/架</p>
+    </section>
+    <section style="flex:1;background:#fef5e7;border-radius:8px;padding:12px;text-align:center;">
+      <p style="font-size:13px;font-weight:600;color:#e67e22;margin:0 0 4px 0;">液冷 200kW</p>
+      <p style="font-size:20px;font-weight:800;color:#e67e22;margin:0;">45,696 核</p>
+      <p style="font-size:11px;color:#d63031;margin:4px 0 0 0;">Vera 的 2 倍+</p>
+    </section>
+  </section>
+</section>
+
+<h3 style="font-size:16px;font-weight:600;margin:24px 0 10px 0;color:#0066cc;">性能声明</h3>
+<p style="margin:0 0 10px 0;">Arm 宣称机架级部署比最新 x86 系统性能提升超过 <strong>2 倍</strong>：</p>
+<p style="margin:0 0 5px 0;padding-left:12px;">1. <strong>更高有效线程密度</strong> — x86 在持续负载下核心争抢致性能退化</p>
+<p style="margin:0 0 5px 0;padding-left:12px;">2. <strong>更高单线程效率</strong> — Neoverse V3 每线程完成更多工作</p>
+<p style="margin:0 0 12px 0;padding-left:12px;">3. <strong>复合效应</strong> — 更多线程 × 更高效率 = 每机架大幅领先</p>
+
+<!-- 市场格局 -->
+<h2 style="font-size:20px;font-weight:700;margin:36px 0 14px 0;padding-bottom:8px;border-bottom:2px solid #e2e5ea;color:#111;">市场格局与竞争分析</h2>
+
+<h3 style="font-size:16px;font-weight:600;margin:24px 0 10px 0;color:#0066cc;">商业模式历史性转变</h3>
+
+<!-- 替代 Mermaid：商业模式演进用三段卡片 -->
+<section style="display:flex;gap:8px;margin:12px 0 18px 0;">
+  <section style="flex:1;background:#e8f2ff;border-radius:8px;padding:12px;text-align:center;border-top:3px solid #74b9ff;">
+    <p style="font-size:13px;font-weight:700;color:#0066cc;margin:0 0 6px 0;">传统模式</p>
+    <p style="font-size:12px;color:#5c6370;margin:0;">IP 授权</p>
+    <p style="font-size:11px;color:#999;margin:6px 0 0 0;">AWS Graviton<br>Google Axion<br>Apple Silicon</p>
+  </section>
+  <section style="flex:0 0 20px;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:18px;">→</section>
+  <section style="flex:1;background:#fef5e7;border-radius:8px;padding:12px;text-align:center;border-top:3px solid #e67e22;">
+    <p style="font-size:13px;font-weight:700;color:#e67e22;margin:0 0 6px 0;">CSS 模式</p>
+    <p style="font-size:12px;color:#5c6370;margin:0;">计算子系统</p>
+    <p style="font-size:11px;color:#999;margin:6px 0 0 0;">快速 SoC 设计</p>
+  </section>
+  <section style="flex:0 0 20px;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:18px;">→</section>
+  <section style="flex:1;background:#e6f5ee;border-radius:8px;padding:12px;text-align:center;border-top:3px solid #0a8754;">
+    <p style="font-size:13px;font-weight:700;color:#0a8754;margin:0 0 6px 0;">AGI CPU</p>
+    <p style="font-size:12px;color:#5c6370;margin:0;">完整芯片销售</p>
+    <p style="font-size:11px;color:#999;margin:6px 0 0 0;">Meta / OpenAI<br>Cloudflare / SAP</p>
+  </section>
+</section>
+
+<h3 style="font-size:16px;font-weight:600;margin:24px 0 10px 0;color:#0066cc;">竞品对比</h3>
+<table style="width:100%;border-collapse:collapse;font-size:13px;margin:12px 0 18px 0;border:1px solid #e2e5ea;">
+  <thead><tr>
+    <th style="background:#eef0f4;font-weight:600;text-align:left;padding:7px 10px;border-bottom:2px solid #e2e5ea;">维度</th>
+    <th style="background:#eef0f4;font-weight:600;text-align:left;padding:7px 10px;border-bottom:2px solid #e2e5ea;">Arm AGI CPU</th>
+    <th style="background:#eef0f4;font-weight:600;text-align:left;padding:7px 10px;border-bottom:2px solid #e2e5ea;">NVIDIA Vera</th>
+    <th style="background:#eef0f4;font-weight:600;text-align:left;padding:7px 10px;border-bottom:2px solid #e2e5ea;">Intel/AMD x86</th>
+  </tr></thead>
+  <tbody>
+    <tr><td style="padding:6px 10px;border-bottom:1px solid #e2e5ea;color:#5c6370;">架构</td><td style="padding:6px 10px;border-bottom:1px solid #e2e5ea;">Neoverse V3</td><td style="padding:6px 10px;border-bottom:1px solid #e2e5ea;">Neoverse 定制</td><td style="padding:6px 10px;border-bottom:1px solid #e2e5ea;">x86-64</td></tr>
+    <tr><td style="padding:6px 10px;border-bottom:1px solid #e2e5ea;color:#5c6370;">工艺</td><td style="padding:6px 10px;border-bottom:1px solid #e2e5ea;">TSMC 3nm</td><td style="padding:6px 10px;border-bottom:1px solid #e2e5ea;">TSMC 3nm</td><td style="padding:6px 10px;border-bottom:1px solid #e2e5ea;">Intel 3 / TSMC 4nm</td></tr>
+    <tr><td style="padding:6px 10px;border-bottom:1px solid #e2e5ea;color:#5c6370;">核心数</td><td style="padding:6px 10px;border-bottom:1px solid #e2e5ea;"><strong style="color:#111;">136</strong></td><td style="padding:6px 10px;border-bottom:1px solid #e2e5ea;">144</td><td style="padding:6px 10px;border-bottom:1px solid #e2e5ea;">128+</td></tr>
+    <tr><td style="padding:6px 10px;border-bottom:1px solid #e2e5ea;color:#5c6370;">线程</td><td style="padding:6px 10px;border-bottom:1px solid #e2e5ea;">单线程/核</td><td style="padding:6px 10px;border-bottom:1px solid #e2e5ea;">SMT</td><td style="padding:6px 10px;border-bottom:1px solid #e2e5ea;">SMT</td></tr>
+    <tr><td style="padding:6px 10px;border-bottom:1px solid #e2e5ea;color:#5c6370;">定位</td><td style="padding:6px 10px;border-bottom:1px solid #e2e5ea;">Agentic AI 编排</td><td style="padding:6px 10px;border-bottom:1px solid #e2e5ea;">AI + 通用</td><td style="padding:6px 10px;border-bottom:1px solid #e2e5ea;">通用数据中心</td></tr>
+    <tr><td style="padding:6px 10px;color:#5c6370;">每架核心</td><td style="padding:6px 10px;"><strong style="color:#0a8754;">45,696</strong></td><td style="padding:6px 10px;">22,528</td><td style="padding:6px 10px;">—</td></tr>
+  </tbody>
+</table>
+
+<!-- 洞察 -->
+<section style="background:#e8f2ff;border-left:3px solid #0066cc;border-radius:0 10px 10px 0;padding:14px 16px;margin:16px 0;">
+  <p style="font-size:12px;font-weight:700;color:#0066cc;margin:0 0 8px 0;">关键洞察</p>
+  <p style="font-size:14px;margin:0 0 6px 0;">◆ <strong>vs NVIDIA Vera</strong> — 同为 Arm 架构，standalone CPU 场景直接竞争，但 NVIDIA 有 GPU+NVLink+CUDA 全栈优势</p>
+  <p style="font-size:14px;margin:0 0 6px 0;">◆ <strong>vs x86</strong> — Arm 的主攻目标，已占云 CPU 约 40%，AGI CPU 加速蚕食</p>
+  <p style="font-size:14px;margin:0;">◆ <strong>vs NVIDIA GPU</strong> — 互补为主。Jensen Huang 在 GTC 表示 CPU 正成为新瓶颈</p>
+</section>
+
+<!-- 风险 -->
+<section style="background:#fef5e7;border-left:3px solid #e67e22;border-radius:0 10px 10px 0;padding:14px 16px;margin:16px 0;">
+  <p style="font-size:12px;font-weight:700;color:#e67e22;margin:0 0 8px 0;">授权商冲突风险</p>
+  <p style="font-size:14px;margin:0;">Arm 从 IP 供应商转为芯片销售商，与授权客户形成"亦友亦敌"关系。但主要授权商均表态支持——做大生态蛋糕对所有参与者有利。</p>
+</section>
+
+<!-- Agentic AI -->
+<h2 style="font-size:20px;font-weight:700;margin:36px 0 14px 0;padding-bottom:8px;border-bottom:2px solid #e2e5ea;color:#111;">为什么是 Agentic AI？CPU 再次成为瓶颈</h2>
+
+<h3 style="font-size:16px;font-weight:600;margin:24px 0 10px 0;color:#0066cc;">工作负载 CPU 占比（Georgia Tech × Intel）</h3>
+<table style="width:100%;border-collapse:collapse;font-size:14px;margin:12px 0 18px 0;border:1px solid #e2e5ea;">
+  <thead><tr>
+    <th style="background:#eef0f4;font-weight:600;text-align:left;padding:8px 12px;border-bottom:2px solid #e2e5ea;">工作负载</th>
+    <th style="background:#eef0f4;font-weight:600;text-align:left;padding:8px 12px;border-bottom:2px solid #e2e5ea;">GPU</th>
+    <th style="background:#eef0f4;font-weight:600;text-align:left;padding:8px 12px;border-bottom:2px solid #e2e5ea;">CPU</th>
+  </tr></thead>
+  <tbody>
+    <tr><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;color:#5c6370;">简单聊天问答</td><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;">90-95%</td><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;">5-10%</td></tr>
+    <tr><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;color:#5c6370;">RAG 检索增强</td><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;">25-50%</td><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;"><strong style="color:#e67e22;">50-75%</strong></td></tr>
+    <tr><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;color:#5c6370;">多 Agent 编排</td><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;">30-40%</td><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;"><strong style="color:#e67e22;">60-70%</strong></td></tr>
+    <tr><td style="padding:7px 12px;color:#5c6370;">工具密集型 Agent</td><td style="padding:7px 12px;">10-20%</td><td style="padding:7px 12px;"><strong style="color:#d63031;">80-90%</strong></td></tr>
+  </tbody>
+</table>
+<p style="margin:0 0 12px 0;">CPU 侧工具处理占 agentic 工作负载总延迟的 <strong>50-90%</strong>。分离 CPU 和 GPU 阶段可将 GPU 需求<strong>降低 8 倍</strong>。</p>
+
+<h3 style="font-size:16px;font-weight:600;margin:24px 0 10px 0;color:#0066cc;">CPU 需求爆发预测</h3>
+<section style="display:flex;gap:8px;margin:12px 0 18px 0;">
+  <section style="flex:1;background:#f7f8fa;border:1px solid #e2e5ea;border-radius:10px;padding:14px 8px;text-align:center;">
+    <p style="font-size:22px;font-weight:800;color:#0066cc;margin:0;line-height:1.1;">4x</p>
+    <p style="font-size:11px;color:#5c6370;margin:4px 0 0 0;">CPU 需求增长</p>
+  </section>
+  <section style="flex:1;background:#f7f8fa;border:1px solid #e2e5ea;border-radius:10px;padding:14px 8px;text-align:center;">
+    <p style="font-size:22px;font-weight:800;color:#0a8754;margin:0;line-height:1.1;">$600亿</p>
+    <p style="font-size:11px;color:#5c6370;margin:4px 0 0 0;">2030 CPU 市场</p>
+  </section>
+  <section style="flex:1;background:#f7f8fa;border:1px solid #e2e5ea;border-radius:10px;padding:14px 8px;text-align:center;">
+    <p style="font-size:22px;font-weight:800;color:#6c5ce7;margin:0;line-height:1.1;">1.2亿</p>
+    <p style="font-size:11px;color:#5c6370;margin:4px 0 0 0;">每 GW 所需核心</p>
+  </section>
+</section>
+
+<!-- 产品落地 -->
+<h2 style="font-size:20px;font-weight:700;margin:36px 0 14px 0;padding-bottom:8px;border-bottom:2px solid #e2e5ea;color:#111;">产品落地与生态支持</h2>
+
+<h3 style="font-size:16px;font-weight:600;margin:24px 0 10px 0;color:#0066cc;">首批客户与合作伙伴</h3>
+<table style="width:100%;border-collapse:collapse;font-size:14px;margin:12px 0 18px 0;border:1px solid #e2e5ea;">
+  <thead><tr>
+    <th style="background:#eef0f4;font-weight:600;text-align:left;padding:8px 12px;border-bottom:2px solid #e2e5ea;">角色</th>
+    <th style="background:#eef0f4;font-weight:600;text-align:left;padding:8px 12px;border-bottom:2px solid #e2e5ea;">公司</th>
+  </tr></thead>
+  <tbody>
+    <tr><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;color:#5c6370;">联合开发</td><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;"><strong style="color:#111;">Meta</strong>（2023 年起，搭配自研 MTIA 加速器）</td></tr>
+    <tr><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;color:#5c6370;">首批客户</td><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;">OpenAI · Cerebras · Cloudflare · F5 · SAP · SK Telecom</td></tr>
+    <tr><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;color:#5c6370;">服务器 OEM</td><td style="padding:7px 12px;border-bottom:1px solid #e2e5ea;">ASRock Rack · Lenovo · Quanta · Supermicro</td></tr>
+    <tr><td style="padding:7px 12px;color:#5c6370;">开源</td><td style="padding:7px 12px;">OCP 参考服务器设计、固件、调试框架</td></tr>
+  </tbody>
+</table>
+
+<section style="border-left:3px solid #0066cc;background:#e8f2ff;padding:12px 16px;margin:12px 0;border-radius:0 8px 8px 0;">
+  <p style="font-size:14px;color:#5c6370;margin:0;font-style:italic;">"The Arm AGI CPU will play an important role in our infrastructure as we scale, strengthening the orchestration layer that coordinates large scale AI workloads."</p>
+  <p style="font-size:13px;color:#111;margin:6px 0 0 0;font-weight:600;">—— Sachin Katti, Head of Industrial Compute, OpenAI</p>
+</section>
+
+<h3 style="font-size:16px;font-weight:600;margin:24px 0 10px 0;color:#0066cc;">商业化时间线</h3>
+<p style="margin:0 0 6px 0;padding-left:12px;"><span style="color:#0066cc;font-weight:600;">● 2026.03</span> — 发布、开放评估与订购</p>
+<p style="margin:0 0 6px 0;padding-left:12px;"><span style="color:#0066cc;font-weight:600;">● 2026 H2</span> — 量产交付</p>
+<p style="margin:0 0 12px 0;padding-left:12px;"><span style="color:#0066cc;font-weight:600;">● FY2031</span> — $150 亿年收入目标（FY2025 总收入仅 $40 亿）</p>
+
+<!-- 社区反应 -->
+<h2 style="font-size:20px;font-weight:700;margin:36px 0 14px 0;padding-bottom:8px;border-bottom:2px solid #e2e5ea;color:#111;">社区反应与行业评价</h2>
+<p style="margin:0 0 6px 0;padding-left:12px;">◆ <strong>The Register</strong> — "Turns out AGI was a CPU this whole time" 调侃命名，认可技术</p>
+<p style="margin:0 0 6px 0;padding-left:12px;">◆ <strong>Morningstar</strong> — "An Nvidia-like chapter may be starting" 比作 NVIDIA 转型</p>
+<p style="margin:0 0 6px 0;padding-left:12px;">◆ <strong>TechSpot</strong> — "Arm just changed the rules" CPU 重获核心地位</p>
+<p style="margin:0 0 12px 0;padding-left:12px;">◆ <strong>华尔街</strong> — 19 Buy / 6 Hold / 1 Sell，多家上调目标价至 $200+</p>
+
+<!-- 启示 -->
+<h2 style="font-size:20px;font-weight:700;margin:36px 0 14px 0;padding-bottom:8px;border-bottom:2px solid #e2e5ea;color:#111;">产业启示</h2>
+<p style="margin:0 0 6px 0;padding-left:12px;">1. <strong>Agentic AI 重构 CPU:GPU 比例</strong> — CPU 重要性正在回升</p>
+<p style="margin:0 0 6px 0;padding-left:12px;">2. <strong>Arm 生态全链路覆盖</strong> — 从 IP 到 CSS 到芯片，巩固数据中心地位</p>
+<p style="margin:0 0 6px 0;padding-left:12px;">3. <strong>能效成为关键维度</strong> — 2x 能效优势 + 每 GW 节省 $100 亿 CAPEX</p>
+<p style="margin:0 0 12px 0;padding-left:12px;">4. <strong>TSMC 3nm 产能争夺</strong> — 仅满足 80% 晶圆需求，高端 CPU 或涨 ~50%</p>
+
+<!-- 尾部 -->
+<section style="margin-top:36px;padding-top:16px;border-top:1px solid #e2e5ea;text-align:center;">
+  <p style="font-size:12px;color:#999;margin:0;">综合 Arm 官方博客、The Register、SiliconAngle、TechSpot、Futurum Group、X/Twitter、Reddit 等来源研究整理</p>
+</section>
+
+</section>
+
+</body>
+</html>
