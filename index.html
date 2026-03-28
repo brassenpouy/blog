@@ -3,617 +3,85 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Arm AGI CPU 深度分析</title>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<title>Blog — brassenpouy</title>
 <style>
-  :root {
-    --bg: #0f0f0f;
-    --surface: #1a1a1a;
-    --surface2: #242424;
-    --border: #333;
-    --text: #e8e8e8;
-    --text-secondary: #999;
-    --accent: #4ecdc4;
-    --accent2: #ff6b6b;
-    --accent3: #ffe66d;
-    --blue: #74b9ff;
-  }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue",
-                 "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
-    background: var(--bg);
-    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
+    background: #fff;
+    color: #1a1a1a;
     line-height: 1.8;
-    font-size: 16px;
     -webkit-font-smoothing: antialiased;
   }
-
   .container {
-    max-width: 720px;
+    max-width: 600px;
     margin: 0 auto;
-    padding: 40px 24px 80px;
+    padding: 60px 24px 80px;
   }
-
-  /* Header / Hero */
-  .hero {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-    border-radius: 16px;
-    padding: 40px 32px;
-    margin-bottom: 40px;
-    border: 1px solid rgba(78, 205, 196, 0.2);
-    position: relative;
-    overflow: hidden;
-  }
-  .hero::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -30%;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, rgba(78,205,196,0.08) 0%, transparent 70%);
-    border-radius: 50%;
-  }
-  .hero-tag {
-    display: inline-block;
-    background: rgba(78,205,196,0.15);
-    color: var(--accent);
-    font-size: 12px;
-    font-weight: 600;
-    padding: 4px 12px;
-    border-radius: 20px;
-    margin-bottom: 16px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-  .hero h1 {
+  h1 {
     font-size: 28px;
-    font-weight: 700;
-    line-height: 1.3;
-    margin-bottom: 16px;
-    background: linear-gradient(135deg, #fff 0%, #74b9ff 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .hero p {
-    color: var(--text-secondary);
-    font-size: 14px;
-    line-height: 1.7;
-  }
-  .hero-meta {
-    margin-top: 20px;
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-  .hero-meta span {
-    font-size: 12px;
-    color: var(--text-secondary);
-    background: rgba(255,255,255,0.05);
-    padding: 4px 10px;
-    border-radius: 6px;
-  }
-
-  /* Stats Cards */
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-bottom: 32px;
-  }
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px 16px;
-    text-align: center;
-  }
-  .stat-card .number {
-    font-size: 28px;
-    font-weight: 700;
-    line-height: 1;
-    margin-bottom: 6px;
-  }
-  .stat-card .number.green { color: var(--accent); }
-  .stat-card .number.red { color: var(--accent2); }
-  .stat-card .number.yellow { color: var(--accent3); }
-  .stat-card .number.blue { color: var(--blue); }
-  .stat-card .label {
-    font-size: 12px;
-    color: var(--text-secondary);
-    line-height: 1.4;
-  }
-
-  /* Section */
-  h2 {
-    font-size: 22px;
-    font-weight: 700;
-    margin: 48px 0 20px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid var(--border);
-    color: #fff;
-  }
-  h2:first-of-type { margin-top: 0; }
-
-  h3 {
-    font-size: 17px;
-    font-weight: 600;
-    margin: 32px 0 12px;
-    color: var(--accent);
-  }
-
-  p { margin-bottom: 16px; }
-
-  strong { color: #fff; }
-
-  /* Tables */
-  .table-wrapper {
-    overflow-x: auto;
-    margin: 16px 0 24px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-  }
-  thead th {
-    background: var(--surface2);
-    color: var(--accent);
-    font-weight: 600;
-    text-align: left;
-    padding: 12px 16px;
-    white-space: nowrap;
-    border-bottom: 2px solid var(--border);
-  }
-  tbody td {
-    padding: 10px 16px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: top;
-  }
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover { background: rgba(78,205,196,0.04); }
-  td:first-child { font-weight: 500; color: var(--text-secondary); white-space: nowrap; }
-
-  /* Lists */
-  ul, ol {
-    margin: 0 0 16px 0;
-    padding-left: 20px;
-  }
-  li {
-    margin-bottom: 8px;
-    line-height: 1.7;
-  }
-
-  /* Blockquote */
-  blockquote {
-    border-left: 3px solid var(--accent);
-    background: var(--surface);
-    padding: 16px 20px;
-    margin: 16px 0;
-    border-radius: 0 10px 10px 0;
-    font-size: 14px;
-    color: var(--text-secondary);
-    font-style: italic;
-  }
-  blockquote strong {
-    color: var(--text);
-    font-style: normal;
-  }
-
-  /* Callout */
-  .callout {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px 24px;
-    margin: 20px 0;
-  }
-  .callout.insight {
-    border-left: 3px solid var(--accent3);
-  }
-  .callout.warning {
-    border-left: 3px solid var(--accent2);
-  }
-  .callout-title {
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-weight: 800;
     margin-bottom: 8px;
   }
-  .callout.insight .callout-title { color: var(--accent3); }
-  .callout.warning .callout-title { color: var(--accent2); }
-
-  /* Mermaid */
-  .mermaid-wrapper {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px;
-    margin: 20px 0;
-    overflow-x: auto;
-    text-align: center;
+  .subtitle {
+    color: #888;
+    font-size: 15px;
+    margin-bottom: 48px;
   }
-
-  /* Timeline */
-  .timeline {
-    position: relative;
-    padding-left: 24px;
-    margin: 16px 0 24px;
+  .post-list { list-style: none; }
+  .post-item {
+    border-bottom: 1px solid #eee;
+    padding: 20px 0;
   }
-  .timeline::before {
-    content: '';
-    position: absolute;
-    left: 6px;
-    top: 4px;
-    bottom: 4px;
-    width: 2px;
-    background: var(--border);
-  }
-  .timeline-item {
-    position: relative;
-    margin-bottom: 16px;
-    padding-left: 8px;
-  }
-  .timeline-item::before {
-    content: '';
-    position: absolute;
-    left: -22px;
-    top: 8px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--accent);
-    border: 2px solid var(--bg);
-  }
-  .timeline-date {
-    font-size: 13px;
-    color: var(--accent);
-    font-weight: 600;
-  }
-  .timeline-text {
-    font-size: 14px;
-    color: var(--text-secondary);
-  }
-
-  /* Comparison highlight */
-  .vs-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin: 16px 0;
-  }
-  .vs-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
-  }
-  .vs-card h4 {
-    font-size: 14px;
-    margin-bottom: 8px;
-  }
-  .vs-card p { font-size: 13px; color: var(--text-secondary); margin: 0; }
-  .vs-card.arm { border-top: 3px solid var(--accent); }
-  .vs-card.arm h4 { color: var(--accent); }
-  .vs-card.x86 { border-top: 3px solid var(--accent2); }
-  .vs-card.x86 h4 { color: var(--accent2); }
-
-  /* Footer */
-  .footer {
-    margin-top: 48px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border);
-    font-size: 12px;
-    color: var(--text-secondary);
-    text-align: center;
-  }
-  .footer a {
-    color: var(--accent);
+  .post-item:first-child { border-top: 1px solid #eee; }
+  .post-item a {
     text-decoration: none;
+    color: inherit;
+    display: block;
   }
-
-  /* Links */
-  a { color: var(--blue); text-decoration: none; }
-  a:hover { text-decoration: underline; }
-
-  /* Mobile */
-  @media (max-width: 480px) {
-    .container { padding: 20px 16px 60px; }
-    .hero { padding: 28px 20px; }
-    .hero h1 { font-size: 22px; }
-    .stats-row { grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .stat-card { padding: 14px 8px; }
-    .stat-card .number { font-size: 22px; }
-    .vs-row { grid-template-columns: 1fr; }
-    table { font-size: 13px; }
-    thead th, tbody td { padding: 8px 10px; }
+  .post-item a:hover .post-title { color: #0066cc; }
+  .post-date {
+    font-size: 13px;
+    color: #999;
+    margin-bottom: 4px;
+  }
+  .post-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    transition: color 0.15s;
+  }
+  .post-desc {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.6;
+  }
+  .post-tag {
+    display: inline-block;
+    font-size: 11px;
+    background: #f0f4ff;
+    color: #0066cc;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-top: 8px;
+    font-weight: 500;
   }
 </style>
 </head>
 <body>
-
 <div class="container">
-
-  <!-- Hero -->
-  <div class="hero">
-    <span class="hero-tag">Industry Deep Dive</span>
-    <h1>Arm AGI CPU 深度分析<br>技术 · 市场 · 产品落地</h1>
-    <p>Arm 35 年来首款自研量产芯片，136 核 Neoverse V3，TSMC 3nm，专为 Agentic AI 数据中心设计。从纯 IP 授权商到完整硅片供应商——一个历史性转折点。</p>
-    <div class="hero-meta">
-      <span>2026-03-28</span>
-      <span>基于 X / Reddit / 行业媒体综合研究</span>
-    </div>
-  </div>
-
-  <!-- Key Stats -->
-  <div class="stats-row">
-    <div class="stat-card">
-      <div class="number green">136</div>
-      <div class="label">Neoverse V3 核心</div>
-    </div>
-    <div class="stat-card">
-      <div class="number red">3nm</div>
-      <div class="label">TSMC 工艺</div>
-    </div>
-    <div class="stat-card">
-      <div class="number yellow">+16%</div>
-      <div class="label">发布日 ARM 股价</div>
-    </div>
-  </div>
-
-  <!-- 事件概述 -->
-  <h2>事件概述</h2>
-  <p>2026 年 3 月 24 日，Arm 在旧金山 Fort Mason 举办 <strong>"Arm Everywhere"</strong> CEO keynote，CEO Rene Haas 亲自发布 Arm AGI CPU——Arm 成立 35 年来首款自研量产数据中心处理器。这不再是 IP 授权或 CSS（Compute Subsystem）交付，而是 Arm <strong>直接设计、由 TSMC 代工、以完整芯片形式销售</strong>的产品。</p>
-  <p>发布当日 ARM 股价飙升约 16%，创一年内最佳单日涨幅。Barclays 上调目标价至 $200，Evercore ISI 上调至 $227，Needham 从 Hold 升级为 Buy。</p>
-
-  <!-- 技术规格 -->
-  <h2>技术规格深度解读</h2>
-
-  <h3>核心参数</h3>
-  <div class="table-wrapper">
-    <table>
-      <thead><tr><th>项目</th><th>规格</th></tr></thead>
-      <tbody>
-        <tr><td>CPU 核心</td><td>最高 <strong>136</strong> 个 Arm Neoverse V3 核心（另有 64 核 / 128 核变体）</td></tr>
-        <tr><td>工艺节点</td><td>TSMC <strong>3nm</strong></td></tr>
-        <tr><td>芯片架构</td><td>双 chiplet 设计，内存与 I/O 集成于同一 die</td></tr>
-        <tr><td>基频 / 睿频</td><td>3.2 GHz / <strong>3.7 GHz</strong></td></tr>
-        <tr><td>TDP</td><td><strong>300W</strong></td></tr>
-        <tr><td>L2 缓存</td><td>每核 2 MB</td></tr>
-        <tr><td>系统级缓存</td><td>128 MB 共享 SLC</td></tr>
-        <tr><td>内存</td><td>12 通道 DDR5，最高 8800 MT/s</td></tr>
-        <tr><td>聚合内存带宽</td><td><strong>825 GB/s</strong>（约 6 GB/s/核）</td></tr>
-        <tr><td>PCIe</td><td>96 lanes <strong>PCIe 6.0</strong></td></tr>
-        <tr><td>CXL</td><td>CXL 3.0</td></tr>
-        <tr><td>内存延迟目标</td><td>&lt;100 ns</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <h3>架构设计哲学</h3>
-  <p>EVP Mohamed Awad 明确表示 AGI CPU 是一款 <strong>"clean sheet design"</strong>，刻意不添加对遗留应用的支持，将全部晶体管资源集中于 AI 工作负载：</p>
-  <ul>
-    <li><strong>单线程/核</strong>：不采用 SMT，每核一个线程，确保 deterministic performance scaling。这与 NVIDIA Vera 形成差异化——Vera 支持 SMT</li>
-    <li><strong>内存与 I/O 集成</strong>：内存控制器和 I/O 集成到与计算核心相同的 die 上以最小化延迟，每个 socket 暴露为两个 NUMA domain</li>
-    <li><strong>不含加速器</strong>：避免集成"不会被 100% 利用"的功能，聚焦纯 CPU 编排能力</li>
+  <h1>Blog</h1>
+  <p class="subtitle">技术分析与行业洞察</p>
+  <ul class="post-list">
+    <li class="post-item">
+      <a href="./arm-agi-cpu/">
+        <div class="post-date">2026-03-28</div>
+        <div class="post-title">Arm AGI CPU 深度分析 — 技术·市场·产品落地</div>
+        <div class="post-desc">Arm 35 年来首款自研量产芯片，136 核 Neoverse V3，TSMC 3nm，专为 Agentic AI 数据中心设计。从纯 IP 授权商到完整硅片供应商的历史性转折。</div>
+        <span class="post-tag">芯片 · AI 基础设施</span>
+      </a>
+    </li>
   </ul>
-
-  <h3>机架级部署配置</h3>
-  <div class="mermaid-wrapper">
-    <pre class="mermaid">
-graph LR
-    AgiCpu["Arm AGI CPU\n136 核 / 300W"] --> BladeNode["1OU 双节点刀片\n272 核 / 刀片"]
-    BladeNode --> AirRack["风冷机架 36kW\n30 刀片 = 8,160 核"]
-    BladeNode --> LiquidRack["液冷机架 200kW\n336 CPU = 45,696 核"]
-    LiquidRack --> Comparison["对比 NVIDIA Vera\nETL256 = 22,528 核/架"]
-
-    style AgiCpu fill:#0f3460,stroke:#4ecdc4,color:#fff
-    style BladeNode fill:#1a1a2e,stroke:#4ecdc4,color:#fff
-    style AirRack fill:#1a1a2e,stroke:#74b9ff,color:#fff
-    style LiquidRack fill:#1a1a2e,stroke:#ffe66d,color:#fff
-    style Comparison fill:#1a1a2e,stroke:#ff6b6b,color:#fff
-    </pre>
-  </div>
-
-  <div class="vs-row">
-    <div class="vs-card arm">
-      <h4>风冷方案</h4>
-      <p>36kW 机架 · 30 个 1OU 双节点刀片<br><strong style="color:#4ecdc4;font-size:20px;">8,160 核/架</strong></p>
-    </div>
-    <div class="vs-card arm">
-      <h4>液冷方案（Supermicro）</h4>
-      <p>200kW 机架 · 42×8 节点服务器<br><strong style="color:#ffe66d;font-size:20px;">45,696 核/架</strong><br>NVIDIA Vera 的 <strong style="color:#ff6b6b;">2 倍+</strong></p>
-    </div>
-  </div>
-
-  <h3>性能声明</h3>
-  <p>Arm 宣称在机架级部署中 AGI CPU 比最新 x86 系统性能提升超过 <strong>2 倍</strong>：</p>
-  <ol>
-    <li><strong>更高的有效线程密度</strong>：x86 在持续负载下核心争抢致性能退化，Arm 的内存带宽优势保持更多有效线程</li>
-    <li><strong>更高的单线程效率</strong>：Neoverse V3 每线程完成更多工作</li>
-    <li><strong>复合效应</strong>：更多可用线程 × 更高单线程性能 = 每机架大幅领先</li>
-  </ol>
-
-  <!-- 市场格局 -->
-  <h2>市场格局与竞争分析</h2>
-
-  <h3>商业模式历史性转变</h3>
-  <div class="mermaid-wrapper">
-    <pre class="mermaid">
-graph LR
-    A["传统模式\nIP 授权"] --> B["CSS 模式\n计算子系统交付"]
-    B --> C["AGI CPU 模式\n完整芯片销售"]
-
-    A -.- D["AWS Graviton\nGoogle Axion\nApple Silicon\nNVIDIA Grace"]
-    B -.- E["快速 SoC 设计"]
-    C -.- F["Meta / OpenAI\nCloudflare / SAP"]
-
-    style A fill:#16213e,stroke:#74b9ff,color:#fff
-    style B fill:#16213e,stroke:#ffe66d,color:#fff
-    style C fill:#0f3460,stroke:#4ecdc4,color:#fff
-    style D fill:#1a1a1a,stroke:#333,color:#999
-    style E fill:#1a1a1a,stroke:#333,color:#999
-    style F fill:#1a1a1a,stroke:#333,color:#999
-    </pre>
-  </div>
-  <p>Arm 同时提供三条路径（"optionality"）：① 购买 IP 自研芯片 → ② 采用 CSS 加速设计 → ③ 直接采购 AGI CPU 快速部署</p>
-
-  <h3>与主要竞争对手对比</h3>
-  <div class="table-wrapper">
-    <table>
-      <thead>
-        <tr><th>维度</th><th>Arm AGI CPU</th><th>NVIDIA Vera</th><th>Intel / AMD x86</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>架构</td><td>Neoverse V3</td><td>Neoverse（定制）</td><td>x86-64</td></tr>
-        <tr><td>工艺</td><td>TSMC 3nm</td><td>TSMC 3nm</td><td>Intel 3 / TSMC 4nm</td></tr>
-        <tr><td>最高核心数</td><td><strong>136</strong></td><td>144</td><td>128+</td></tr>
-        <tr><td>线程模型</td><td>单线程/核</td><td>SMT</td><td>SMT</td></tr>
-        <tr><td>定位</td><td>Agentic AI 编排</td><td>AI + 通用</td><td>通用数据中心</td></tr>
-        <tr><td>每架核心密度</td><td style="color:#4ecdc4;font-weight:700;">45,696</td><td>22,528</td><td>—</td></tr>
-        <tr><td>商业关系</td><td>Arm 直销</td><td>NVIDIA 自产</td><td>直接销售</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="callout insight">
-    <div class="callout-title">关键洞察</div>
-    <ul>
-      <li><strong>vs NVIDIA Vera</strong>：两者都基于 Arm 架构，在 standalone CPU 机架场景直接竞争。但 NVIDIA 拥有 GPU + NVLink + CUDA 全栈优势，Vera 更多作为 GPU 集群的伴侣 CPU</li>
-      <li><strong>vs x86</strong>：Arm 的主要攻击目标。Arm 已占云数据中心 CPU 市场约 40%，AGI CPU 进一步加速蚕食</li>
-      <li><strong>vs NVIDIA GPU</strong>：互补为主。Jensen Huang 在 GTC 表示 CPU 正成为新瓶颈，并发来祝贺视频</li>
-    </ul>
-  </div>
-
-  <div class="callout warning">
-    <div class="callout-title">授权商冲突风险</div>
-    <p>Arm 从 IP 供应商转为芯片销售商，与自身授权客户形成"亦友亦敌"关系。DIGITIMES 报道 TSMC 投资的 GUC（创意电子）等将受冲击。但主要授权商均已表态支持——Arm 提供更多"可选性"而非替代，做大生态蛋糕对所有参与者有利。</p>
-  </div>
-
-  <!-- Agentic AI -->
-  <h2>为什么是 Agentic AI？CPU 再次成为瓶颈</h2>
-
-  <h3>工作负载特征（Georgia Tech × Intel 研究）</h3>
-  <div class="table-wrapper">
-    <table>
-      <thead><tr><th>工作负载类型</th><th>GPU 占比</th><th>CPU 占比</th></tr></thead>
-      <tbody>
-        <tr><td>简单聊天问答</td><td>90-95%</td><td style="color:var(--text-secondary);">5-10%</td></tr>
-        <tr><td>RAG 检索增强</td><td>25-50%</td><td style="color:var(--accent3);font-weight:600;">50-75%</td></tr>
-        <tr><td>多 Agent 协作编排</td><td>30-40%</td><td style="color:var(--accent3);font-weight:600;">60-70%</td></tr>
-        <tr><td>工具密集型 Agent（SWE-Agent）</td><td>10-20%</td><td style="color:var(--accent2);font-weight:700;">80-90%</td></tr>
-      </tbody>
-    </table>
-  </div>
-  <p>CPU 侧工具处理在 agentic 工作负载中占总延迟的 <strong>50-90%</strong>。分离 CPU 和 GPU 阶段可将相同工作负载的 GPU 需求<strong>降低 8 倍</strong>。</p>
-
-  <h3>CPU 需求爆发预测</h3>
-  <div class="stats-row">
-    <div class="stat-card">
-      <div class="number blue">4x</div>
-      <div class="label">CPU 需求增长</div>
-    </div>
-    <div class="stat-card">
-      <div class="number green">$600亿</div>
-      <div class="label">2030 年 CPU 市场</div>
-    </div>
-    <div class="stat-card">
-      <div class="number yellow">1.2亿</div>
-      <div class="label">每 GW 所需核心</div>
-    </div>
-  </div>
-
-  <!-- 产品落地 -->
-  <h2>产品落地与生态支持</h2>
-
-  <h3>首批客户与合作伙伴</h3>
-  <div class="table-wrapper">
-    <table>
-      <thead><tr><th>角色</th><th>公司</th></tr></thead>
-      <tbody>
-        <tr><td>联合开发</td><td><strong>Meta</strong>（从 2023 年起共同开发，与自研 MTIA 加速器搭配）</td></tr>
-        <tr><td>首批客户</td><td>OpenAI · Cerebras · Cloudflare · F5 · SAP · SK Telecom · Rebellions · Positron</td></tr>
-        <tr><td>服务器 OEM</td><td>ASRock Rack · Lenovo · Quanta Computer · Supermicro</td></tr>
-        <tr><td>开源贡献</td><td>OCP 参考服务器设计、固件、调试框架</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <blockquote>
-    "The Arm AGI CPU will play an important role in our infrastructure as we scale, strengthening the orchestration layer that coordinates large scale AI workloads."<br>
-    <strong>—— Sachin Katti, Head of Industrial Compute, OpenAI</strong>
-  </blockquote>
-
-  <h3>商业化时间线</h3>
-  <div class="timeline">
-    <div class="timeline-item">
-      <div class="timeline-date">2026 年 3 月</div>
-      <div class="timeline-text">发布、开放评估与订购</div>
-    </div>
-    <div class="timeline-item">
-      <div class="timeline-date">2026 下半年</div>
-      <div class="timeline-text">量产交付</div>
-    </div>
-    <div class="timeline-item">
-      <div class="timeline-date">FY2031 目标</div>
-      <div class="timeline-text">$150 亿年收入（FY2025 总收入仅 $40 亿）</div>
-    </div>
-  </div>
-
-  <!-- 社区反应 -->
-  <h2>社区反应与行业评价</h2>
-  <ul>
-    <li><strong>The Register</strong>："Turns out AGI was a CPU this whole time"——调侃 AGI 命名，但认可技术实力</li>
-    <li><strong>Morningstar</strong>："An Nvidia-like chapter may be starting"——比作 NVIDIA 从 GPU 迈向全栈的转型</li>
-    <li><strong>TechSpot</strong>："Arm just changed the rules"——CPU 在 agentic AI 时代重获核心地位</li>
-    <li><strong>华尔街共识</strong>：19 Buy / 6 Hold / 1 Sell，多家上调目标价至 $200+</li>
-  </ul>
-  <p>Arm 官方在 X (#ArmEverywhere) 密集宣传，Nasdaq 大楼亮灯展示。NVIDIA CEO Jensen Huang 发来视频祝贺，双方维持合作关系。</p>
-
-  <!-- 启示 -->
-  <h2>产业启示</h2>
-  <ol>
-    <li><strong>Agentic AI 重构 CPU:GPU 比例</strong>——CPU 在 AI 基础设施中的重要性正在回升</li>
-    <li><strong>Arm 生态全链路覆盖</strong>——从 IP 到 CSS 到芯片，巩固数据中心地位</li>
-    <li><strong>能效成为关键维度</strong>——2x 能效优势 + 每 GW 节省 $100 亿 CAPEX</li>
-    <li><strong>TSMC 3nm 产能争夺</strong>——供应链预测仅能满足 80% 晶圆需求，高端 CPU 价格可能上涨 ~50%</li>
-  </ol>
-
-  <!-- Footer -->
-  <div class="footer">
-    <p>综合 Arm 官方博客、The Register、SiliconAngle、TechSpot、<br>Futurum Group、X/Twitter、Reddit 等来源研究整理</p>
-    <p style="margin-top:8px;">
-      <a href="https://newsroom.arm.com/blog/introducing-arm-agi-cpu">Arm 官方博客</a> ·
-      <a href="https://www.theregister.com/2026/03/24/arm_agi_cpu/">The Register</a> ·
-      <a href="https://www.arm.com/company/arm-everywhere">Arm Everywhere</a>
-    </p>
-  </div>
-
 </div>
-
-<script>
-  mermaid.initialize({
-    startOnLoad: true,
-    theme: 'dark',
-    themeVariables: {
-      primaryColor: '#0f3460',
-      primaryTextColor: '#e8e8e8',
-      primaryBorderColor: '#4ecdc4',
-      lineColor: '#4ecdc4',
-      secondaryColor: '#1a1a2e',
-      tertiaryColor: '#242424',
-      fontFamily: '-apple-system, "PingFang SC", sans-serif',
-      fontSize: '13px'
-    }
-  });
-</script>
-
 </body>
 </html>
